@@ -9,7 +9,7 @@ threads = []
 def setup(Server):
     # Create socket to receive msgs from other datacenters
     print("Cluster", cluster)
-    identifier = input("Pick an address (A, B or C): ")
+    identifier = input("Pick an address (A, B, C, D or E): ")
 
     if identifier not in cluster:
         ip = input("IP: ")
