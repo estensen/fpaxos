@@ -224,8 +224,10 @@ class Server:
             port = int(self .client_requests[2])
             addr = (addr[0], port)
 
+            milliseconds = self.client_requests[3]
+
             if new_ticket_balance >= 0:
-                data = "Here's your " + tickets + " ticket(s)"
+                data = "Here's your " + tickets + " ticket(s)," + milliseconds
             else:
                 data = "Could not buy " + self.client_requests[1] + " ticket(s)"
             self.send_data(data, addr)
