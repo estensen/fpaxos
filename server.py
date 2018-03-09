@@ -22,7 +22,7 @@ class Server:
         self.cluster = cluster
         self.quorum_size = ceil(len(cluster) / 2)
 
-        self.init_tickets_available = 100
+        self.init_tickets_available = 1000000000
         self.tickets_available = self.init_tickets_available
         self.client_requests = None
 
