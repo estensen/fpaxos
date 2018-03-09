@@ -57,7 +57,7 @@ class Client:
         else:
             print("Couldn't recognize the command", user_input)
     
-    def stats(t_send, t_rcvd):
+    def stats(self, t_send, t_rcvd):
         global tput_file
         global prev_time
         global count_tput
@@ -66,16 +66,16 @@ class Client:
         if t_send - prev_time > 1000:
             avg_lat = count_lat/float(count_tput)
             with open('tput.txt', 'a+') as tput_file:
-                tput_file.write(str(count_tput) + "," + str(avg_lat) + "\n")
+                tput_file.write("Throughput (msgs per second):" + str(count_tput) + ", Avg Latency (ms):" + str(round(avg_lat, 1)) + "\n")
             prev_time = t_send
             count_lat = 0
-            count_tput = 1
+            count_tput = 0
 
         count_tput += 1
         lat = abs(float(t_rcvd) - float(t_send))
         count_lat += lat
         with open('latency.txt', 'a+') as lat_file:
-            lat_file.write(str(lat) + "\n")
+            lat_file.write(str(round(lat,1)) + "\n")
 
     def listen(self):
         while True:
@@ -88,10 +88,10 @@ class Client:
                 for line in msg_list:
                     print(line)
                 t_send = float(msg_list[-1])
-                Client.stats(t_send, t_rcvd)
+                self.stats(t_send, t_rcvd)
             else:
                 t_send = float(msg.split(",")[-1])
-                Client.stats(t_send, t_rcvd)
+                self.stats(t_send, t_rcvd)
                 print(msg)
 
     def user_input(self):
