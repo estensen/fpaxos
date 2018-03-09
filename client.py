@@ -5,6 +5,8 @@ from threading import Thread
 from config import cluster
 
 t_send_prv = time.time()
+count_tput = 0
+count_lat = 0
 BUFFER_SIZE = 1024
 threads = []
 
@@ -54,8 +56,12 @@ class Client:
             self.socket_setup()
         else:
             print("Couldn't recognize the command", user_input)
-    def stats(t_send):
-	count_tput = count_tput+1;
+    
+   def stats(t_send):
+	global ftime
+        global t_send_prv
+        global count_tput
+        global count_lat
         if(t_send - t_send_prv > 1000):
        	    avg_lat = count_lat/float(count_tput)
             ftime=open('tput.txt','a+')
@@ -64,6 +70,7 @@ class Client:
             t_send_prv = t_send
             count_lat = 0;
             count_tput = 0;
+	count_tput += 1
         t_rcvd = time.time() * 1000
         lat = abs(int(t_rcvd) - int(t_send)) 
         count_lat += lat
@@ -72,10 +79,6 @@ class Client:
         ftime.close()
 		
     def listen(self):
-        global ftime
-	global t_send_prv
-	global count_tput
-	global count_lat
 	while True:
             data, addr = self.client_sock.recvfrom(BUFFER_SIZE)
             msg = data.decode("utf-8")
@@ -85,38 +88,10 @@ class Client:
                 for line in msg_list:
                     print(line)
 		t_send = msg_list[-1]
-		count_tput = count_tput+1;
-		if(t_send - t_send_prv > 1000):
-		    avg_lat = count_lat/float(count_tput)
-		    ftime=open('tput.txt','a+')
-		    ftime.write(str(count_tput) + "," + str(avg_lat))
-		    ftime.close()
-		    t_send_prv = t_send
-		    count_lat = 0;
-		    count_tput = 0;
-                t_rcvd = time.time() * 1000
-		lat = abs(int(t_rcvd) - int(t_send)) 
-		count_lat += lat
-		ftime = open('latency.txt','a+')
-                ftime.write(lat)
-                ftime.close()
-            else:
+		stats(t_send)
+            ielse:
 		t_send = msg.split(",")[-1]
-                t_rcvd = time.time() * 1000
-		count_tput = count_tput+1;
-                if(t_send - t_send_prv > 1000):
-                    avg_lat = count_lat/float(count_tput)
-                    ftime=open('tput.txt','a+')
-                    ftime.write(str(count_tput) + "," + str(avg_lat))
-                    ftime.close()
-                    t_send_prv = t_send
-                    count_lat = 0;
-                    count_tput = 0;
-		lat = abs(int(t_rcvd) - int(t_send))
-		count_lat += lat
-		ftime = open('latency.txt','a+')
-		ftime.write(lat)
-		ftime.close()
+		stats(t_send)
                 print(msg)
 
     def user_input(self):
