@@ -1,6 +1,6 @@
-import socket
 import ast
-from time import sleep
+import socket
+from time import sleep, time
 from threading import Thread
 from config import cluster
 
@@ -39,10 +39,12 @@ class Client:
         if len(words) > 1:
             arg = words[1]
 
+        milliseconds = time() * 1000
+
         if command == "show":
-            self.send_msg("show," + str(self.client_addr[1]))
+            self.send_msg("{},{},{}".format(command, str(self.client_addr[1]), str(milliseconds)))
         elif command == "buy" and arg.isdigit():
-            self.send_msg("{},{},{}".format(command, arg, self.client_addr[1]))
+            self.send_msg("{},{},{},{}".format(command, arg, self.client_addr[1], str(milliseconds)))
         elif command == "change":
             # Kill listen_thread before changing server_sock
             self.server_sock.close()

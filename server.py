@@ -200,8 +200,10 @@ class Server:
         # Must use a full Paxos instance to gain consensus on most uptdated state
         # Send local log to client
         addr = (addr[0], int(msg_list[1]))
+        milliseconds = msg_list[2]
         log_str = str(self.tickets_available) + "," + ",".join(map(str, self.log))
-        self.send_data(log_str, addr)
+        data = log_str + milliseconds
+        self.send_data(data, addr)
 
     def send_data(self, data, addr):
         msg = bytes(data, encoding="ascii")
@@ -224,8 +226,10 @@ class Server:
             port = int(self .client_requests[2])
             addr = (addr[0], port)
 
+            milliseconds = self.client_requests[3]
+
             if new_ticket_balance >= 0:
-                data = "Here's your " + tickets + " ticket(s)"
+                data = "Here's your " + tickets + " ticket(s)," + milliseconds
             else:
                 data = "Could not buy " + self.client_requests[1] + " ticket(s)"
             self.send_data(data, addr)
