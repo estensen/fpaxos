@@ -4,7 +4,7 @@ from time import sleep, time
 from threading import Thread
 from config import cluster
 
-t_send_prv = time.time()
+prev_time = time.time()
 count_tput = 0
 count_lat = 0
 BUFFER_SIZE = 1024
@@ -57,41 +57,41 @@ class Client:
         else:
             print("Couldn't recognize the command", user_input)
     
-   def stats(t_send):
-	global ftime
-        global t_send_prv
+    def stats(t_send, t_rcvd):
+        global tput_file
+        global prev_time
         global count_tput
         global count_lat
-        if(t_send - t_send_prv > 1000):
-       	    avg_lat = count_lat/float(count_tput)
-            ftime=open('tput.txt','a+')
-            ftime.write(str(count_tput) + "," + str(avg_lat))
-            ftime.close()
-            t_send_prv = t_send
+
+        if t_send - prev_time > 1000:
+            avg_lat = count_lat/float(count_tput)
+            with open('tput.txt', 'a+') as tput_file:
+                tput_file.write(str(count_tput) + "," + str(avg_lat))
+            prev_time = t_send
             count_lat = 0
             count_tput = 0
+
         count_tput += 1
-        t_rcvd = time.time() * 1000
-        lat = abs(float(t_rcvd) - float(t_send)) 
+        lat = abs(float(t_rcvd) - float(t_send))
         count_lat += lat
-        ftime = open('latency.txt','a+')
-        ftime.write(lat)
-        ftime.close()
-		
+        with open('latency.txt', 'a+') as lat_file:
+            lat_file.write(lat)
+
     def listen(self):
-	while True:
+        while True:
             data, addr = self.client_sock.recvfrom(BUFFER_SIZE)
             msg = data.decode("utf-8")
-	
+            t_rcvd = time.time() * 1000
+
             if msg[0].isdigit():
                 msg_list = ast.literal_eval(msg)
                 for line in msg_list:
                     print(line)
-		t_send = msg_list[-1]
-		stats(t_send)
+                t_send = msg_list[-1]
+                stats(t_send, t_rcvd)
             else:
-		t_send = msg.split(",")[-1]
-		stats(t_send)
+                t_send = msg.split(",")[-1]
+                stats(t_send, t_rcvd)
                 print(msg)
 
     def user_input(self):
