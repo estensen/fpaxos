@@ -20,7 +20,9 @@ class Server:
         self.identifier = identifier
         self.server_addr = server_addr
         self.cluster = cluster
-        self.quorum_size = ceil(len(cluster) / 2)
+        # Quorum sizes are hardcoded for now to expect 5 nodes
+        self.quorum1_size = 4
+        self.quorum2_size = 2
 
         self.init_tickets_available = 1000000000
         self.tickets_available = self.init_tickets_available
@@ -77,7 +79,7 @@ class Server:
 
         self.recv_promises_uid.add(from_uid)
         if not self.leader:
-            if len(self.recv_promises_uid) >= self.quorum_size:
+            if len(self.recv_promises_uid) >= self.quorum1_size:
                 self.recv_promises_uid = set()
                 self.send_accepts()
 
@@ -112,7 +114,7 @@ class Server:
         proposal_num, proposer_id, from_uid, proposal_val = msg_list[1:]
         self.recv_accepted_uid.add(from_uid)
 
-        if len(self.recv_accepted_uid) >= self.quorum_size:
+        if len(self.recv_accepted_uid) >= self.quorum2_size:
             self.recv_accepted_uid = set()
             if not self.leader:
                 self.leader = True
@@ -170,7 +172,6 @@ class Server:
         print("New node added to cluster")
         identifier, ip, port = msg_list
         self.cluster[identifier] = (str(ip), int(port))
-        self.quorum_size = ceil(len(cluster) / 2)
         self.log.append(msg_list)
 
     def recv_new_node(self, msg_list):
@@ -202,7 +203,7 @@ class Server:
         addr = (addr[0], int(msg_list[1]))
         milliseconds = msg_list[2]
         log_str = str(self.tickets_available) + "," + ",".join(map(str, self.log))
-        data = log_str + milliseconds
+        data = log_str + "," + milliseconds
         self.send_data(data, addr)
 
     def send_data(self, data, addr):

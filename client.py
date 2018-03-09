@@ -13,7 +13,8 @@ class Client:
         self.thread_setup()
 
     def socket_setup(self):
-        self.identifier = input("Which datacenter do you want to connect to? (A, B or C) ")
+        # TODO: Print identifiers in the cluster
+        self.identifier = input("Which datacenter do you want to connect to? (A, B, C, D or E) ")
 
         if self.identifier not in cluster:
             ip = input("IP: ")
