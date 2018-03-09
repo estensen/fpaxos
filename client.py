@@ -72,7 +72,7 @@ class Client:
             count_tput = 0
         count_tput += 1
         t_rcvd = time.time() * 1000
-        lat = abs(int(t_rcvd) - int(t_send)) 
+        lat = abs(float(t_rcvd) - float(t_send)) 
         count_lat += lat
         ftime = open('latency.txt','a+')
         ftime.write(lat)
