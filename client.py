@@ -68,9 +68,9 @@ class Client:
             ftime.write(str(count_tput) + "," + str(avg_lat))
             ftime.close()
             t_send_prv = t_send
-            count_lat = 0;
-            count_tput = 0;
-	count_tput += 1
+            count_lat = 0
+            count_tput = 0
+        count_tput += 1
         t_rcvd = time.time() * 1000
         lat = abs(int(t_rcvd) - int(t_send)) 
         count_lat += lat
