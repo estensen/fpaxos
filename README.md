@@ -5,14 +5,21 @@ Use heartbeats to confirm whether the leader is still alive.
 Should handle configuration changes.
 It is not required to handle causality between requests as long as the MUTEX problem is solved.
 
-# User Interface
-Starts with 3 datacenters
-Configuration changes should add 2 more
+# Getting Started
+## Installing
+```
+brew install python
+```
 
-Each datacenter has a client connected to it.
+## Setup
+Paxos is here configured to run with 5 nodes
 
-Client commands
+Run `python main.py` in 5 separate terminal windows and us a unique identifier (A-E) for each window
+
+Run `python client.py` in another terminal window and select the node you want to connect to
+
+## Client commands
 1. buy numOfTickets tickets
 2. show
-	First line: State of state machine
-	Following lines show committed logs
+	- First line: State of state machine
+	- Following lines show committed logs
