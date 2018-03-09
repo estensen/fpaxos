@@ -203,7 +203,7 @@ class Server:
         addr = (addr[0], int(msg_list[1]))
         milliseconds = msg_list[2]
         log_str = str(self.tickets_available) + "," + ",".join(map(str, self.log))
-        data = log_str + milliseconds
+        data = log_str + "," + milliseconds
         self.send_data(data, addr)
 
     def send_data(self, data, addr):
