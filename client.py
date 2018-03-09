@@ -89,7 +89,7 @@ class Client:
                     print(line)
 		t_send = msg_list[-1]
 		stats(t_send)
-            ielse:
+            else:
 		t_send = msg.split(",")[-1]
 		stats(t_send)
                 print(msg)
