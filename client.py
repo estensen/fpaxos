@@ -4,8 +4,8 @@ from time import sleep, time
 from threading import Thread
 from config import cluster
 
-prev_time = time.time()
-count_tput = 0
+prev_time = time()
+count_tput = 1
 count_lat = 0
 BUFFER_SIZE = 1024
 threads = []
@@ -66,32 +66,32 @@ class Client:
         if t_send - prev_time > 1000:
             avg_lat = count_lat/float(count_tput)
             with open('tput.txt', 'a+') as tput_file:
-                tput_file.write(str(count_tput) + "," + str(avg_lat))
+                tput_file.write(str(count_tput) + "," + str(avg_lat) + "\n")
             prev_time = t_send
             count_lat = 0
-            count_tput = 0
+            count_tput = 1
 
         count_tput += 1
         lat = abs(float(t_rcvd) - float(t_send))
         count_lat += lat
         with open('latency.txt', 'a+') as lat_file:
-            lat_file.write(lat)
+            lat_file.write(str(lat) + "\n")
 
     def listen(self):
         while True:
             data, addr = self.client_sock.recvfrom(BUFFER_SIZE)
             msg = data.decode("utf-8")
-            t_rcvd = time.time() * 1000
+            t_rcvd = time() * 1000
 
             if msg[0].isdigit():
                 msg_list = ast.literal_eval(msg)
                 for line in msg_list:
                     print(line)
-                t_send = msg_list[-1]
-                stats(t_send, t_rcvd)
+                t_send = float(msg_list[-1])
+                Client.stats(t_send, t_rcvd)
             else:
-                t_send = msg.split(",")[-1]
-                stats(t_send, t_rcvd)
+                t_send = float(msg.split(",")[-1])
+                Client.stats(t_send, t_rcvd)
                 print(msg)
 
     def user_input(self):
