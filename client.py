@@ -113,4 +113,8 @@ def run():
     client = Client()
 
 if __name__ == "__main__":
+    with open('tput.txt', 'w') as tput_file:
+        tput_file.write("")
+    with open('latency.txt', 'w') as tput_file:
+        tput_file.write("")
     run()
