@@ -1,7 +1,7 @@
 import socket
 import ast
 from threading import Thread
-from random import random
+from random import choice, random
 from math import ceil
 from time import sleep, time
 from config import cluster
@@ -198,12 +198,20 @@ class Server:
                 print("Have to relay to leader")
 
     def recv_show(self, addr, msg_list):
-        # Must use a full Paxos instance to gain consensus on most uptdated state
-        # Send local log to client
         addr = (addr[0], int(msg_list[1]))
         milliseconds = msg_list[2]
-        log_str = str(self.tickets_available) + "," + ",".join(map(str, self.log))
+        if not self.log:
+            log_str = "no transactions"
+        else:
+            log_str = str(self.tickets_available) + "," + ",".join(map(str, self.log))
         data = log_str + "," + milliseconds
+        self.send_data(data, addr)
+
+    def recv_random(self, addr, msg_list):
+        addr = (addr[0], int(msg_list[1]))
+        milliseconds = msg_list[2]
+        random_transaction = "no transactions" if not self.log else str(choice(self.log))
+        data = random_transaction + "," + milliseconds
         self.send_data(data, addr)
 
     def send_data(self, data, addr):
@@ -266,6 +274,8 @@ class Server:
                 self.recv_buy(msg, uid)
             elif command == "show":
                 self.recv_show(addr, msg_list)
+            elif command == "random":
+                self.recv_random(addr, msg_list)
 
             # Phase 1
             elif command == "prepare":

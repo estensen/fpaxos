@@ -45,7 +45,7 @@ class Client:
 
         milliseconds = time() * 1000
 
-        if command == "show":
+        if command == "show" or command == "random":
             self.send_msg("{},{},{}".format(command, str(self.client_addr[1]), str(milliseconds)))
         elif command == "buy" and arg.isdigit():
             self.send_msg("{},{},{},{}".format(command, arg, self.client_addr[1], str(milliseconds)))
