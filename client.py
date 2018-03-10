@@ -3,6 +3,7 @@ import socket
 from time import sleep, time
 from threading import Thread
 from config import cluster
+from random import randint
 
 prev_time = time()
 count_tput = 1
@@ -94,20 +95,38 @@ class Client:
                 self.stats(t_send, t_rcvd)
                 print(msg)
 
-    def user_input(self):
+    def msg_load(self):
+        msg_data = ''
+        msg_per_sec = 1
+        msg_count = 0
+        rate_interval = 5000
         while True:
-            user_input = input("Send msg to datacenter: ")
-            self.process_user_input(user_input)
+            msg_time1 = time() * 1000
+            while True:
+                msg_time2 = time() * 1000
+
+                if msg_time2 - msg_time1 < rate_interval:
+                    sleep(1 / float(msg_per_sec))
+                    msg_count = msg_count + 1
+                    num_tickets = randint(1, 100)
+                    msg_data = ('buy ' + str(num_tickets) + ' tickets')
+                    self.process_user_input(msg_data)
+
+                else:
+
+                    if msg_per_sec < 100:
+                        msg_per_sec += 1
+
+                    break
 
     def thread_setup(self):
+        msg_thread = Thread(target=self.msg_load)
+        threads.append(msg_thread)
+        msg_thread.start()
+        
         listen_thread = Thread(target=self.listen)
         threads.append(listen_thread)
         listen_thread.start()
-
-        input_thread = Thread(target=self.user_input)
-        threads.append(input_thread)
-        input_thread.start()
-
 
 def run():
     client = Client()
