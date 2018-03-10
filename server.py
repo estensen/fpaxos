@@ -1,3 +1,4 @@
+import os
 import socket
 import ast
 from threading import Thread
@@ -161,7 +162,8 @@ class Server:
         self.tickets_available = self.init_tickets_available
         for el in log_list:
             if el[0].isdigit():
-                self.tickets_available -= int(el[2])
+                tickets_sold = int(el[2])
+                self.tickets_available -= tickets_sold
                 self.log.append(el)
             else:
                 print("## Need config change")
@@ -329,11 +331,27 @@ class Server:
                 if delta > heartbeat_delta:
                     self.send_prepare()
 
+    def load_log_from_file(self):
+        filename = self.identifier + ".txt"
+
+        if os.path.isfile(filename):
+            with open(filename, 'r') as persistent_log:
+                for line in persistent_log:
+                    if el[0].isdigit():
+                        tickets_sold = int(el[2])
+                        self.tickets_available -= tickets_sold
+                        self.log.append(el)
+        else:
+            with open(filename, 'w') as persistent_log:
+                persistent_log.write("")
+
     def setup(self):
         self.sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
         self.sock.bind(self.server_addr)
         print("Server socket created")
         print("Server addr:", self.server_addr)
+
+        self.load_log_from_file()
 
         listen_thread = Thread(target=self.listen)
         threads.append(listen_thread)
