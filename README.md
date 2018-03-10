@@ -1,9 +1,5 @@
-# Multi-Paxos
-Elect one kiosk as leader
-When the leader is stable the system does not need to go through "prepare phase" and can run "accept phase" when the requests come.
-Use heartbeats to confirm whether the leader is still alive.
-Should handle configuration changes.
-It is not required to handle causality between requests as long as the MUTEX problem is solved.
+# FPaxos
+An implementation of Flexible Paxos made to test throughput and latency at leader failure
 
 # Getting Started
 ## Installing
