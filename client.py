@@ -3,12 +3,14 @@ import socket
 from time import sleep, time
 from threading import Thread
 from config import cluster
+from random import randint
 
 prev_time = time()
 count_tput = 1
 count_lat = 0
 BUFFER_SIZE = 1024
 threads = []
+msg_data = ''
 
 class Client:
     def __init__(self):
@@ -94,19 +96,43 @@ class Client:
                 self.stats(t_send, t_rcvd)
                 print(msg)
 
-    def user_input(self):
+    def msg_load(self):
+        global msg_data
+        rate=10
+        msg_count = 0
         while True:
-            user_input = input("Send msg to datacenter: ")
-            self.process_user_input(user_input)
+            msg_time1 = time()*1000
+            while True:
+                msg_time2 = time()*1000
+                if(msg_time2-msg_time1<5000):
+                    sleep(rate*0.1)
+                    msg_count = msg_count+1
+                    msg_string = randint(1, 100)
+                    msg_data = ('buy ' + str(msg_string) + ' tickets')
+                    self.process_user_input(msg_data)
+                else:
+                    if(rate>=0):
+                        rate = rate-1
+                    break
+
+
+##    def user_input(self):
+##        while True:
+##            user_input = input("Send msg to datacenter: ")
+##            self.process_user_input(user_input)
 
     def thread_setup(self):
+        msg_thread = Thread(target=self.msg_load)
+        threads.append(msg_thread)
+        msg_thread.start()
+        
         listen_thread = Thread(target=self.listen)
         threads.append(listen_thread)
         listen_thread.start()
 
-        input_thread = Thread(target=self.user_input)
-        threads.append(input_thread)
-        input_thread.start()
+##        input_thread = Thread(target=self.user_input)
+##        threads.append(input_thread)
+##        input_thread.start()
 
 
 def run():
