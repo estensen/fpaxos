@@ -200,14 +200,17 @@ class Server:
     def recv_show(self, addr, msg_list):
         addr = (addr[0], int(msg_list[1]))
         milliseconds = msg_list[2]
-        log_str = str(self.tickets_available) + "," + ",".join(map(str, self.log))
+        if not self.log:
+            log_str = "no transactions"
+        else:
+            log_str = str(self.tickets_available) + "," + ",".join(map(str, self.log))
         data = log_str + "," + milliseconds
         self.send_data(data, addr)
 
     def recv_random(self, addr, msg_list):
         addr = (addr[0], int(msg_list[1]))
         milliseconds = msg_list[2]
-        random_transaction = str(choice(self.log))
+        random_transaction = "no transactions" if not self.log else str(choice(self.log))
         data = random_transaction + "," + milliseconds
         self.send_data(data, addr)
 
