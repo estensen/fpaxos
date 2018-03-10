@@ -38,6 +38,7 @@ class Server:
         self.promised_id = (0, 0)
 
         self.log = []
+        self.filename = self.identifier + ".txt"
         self.setup()
 
     def set_proposal(self, val):
@@ -139,6 +140,7 @@ class Server:
                 self.tickets_available = new_ticket_balance
                 print(str(self.tickets_available) + " left")
                 self.log.append(msg_list[1:])
+                self.write_to_persistent_storage(msg_list[1:])
             self.send_client_response(addr, msg_list, new_ticket_balance)
 
     def request_missing_bytes(self, leader_log_len):
@@ -331,19 +333,22 @@ class Server:
                 if delta > heartbeat_delta:
                     self.send_prepare()
 
-    def load_log_from_file(self):
-        filename = self.identifier + ".txt"
-
-        if os.path.isfile(filename):
-            with open(filename, 'r') as persistent_log:
+    def load_log_from_persistent_storage(self):
+        if os.path.isfile(self.filename):
+            with open(self.filename, 'r') as persistent_log:
                 for line in persistent_log:
                     if el[0].isdigit():
                         tickets_sold = int(el[2])
                         self.tickets_available -= tickets_sold
                         self.log.append(el)
         else:
-            with open(filename, 'w') as persistent_log:
+            with open(self.filename, 'w') as persistent_log:
                 persistent_log.write("")
+
+    def write_to_persistent_storage(self, log_item):
+        with open(self.filename, 'a') as persistent_log:
+            line = str(log_item) + '\n'
+            persistent_log.write(line)
 
     def setup(self):
         self.sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
@@ -351,7 +356,7 @@ class Server:
         print("Server socket created")
         print("Server addr:", self.server_addr)
 
-        self.load_log_from_file()
+        self.load_log_from_persistent_storage()
 
         listen_thread = Thread(target=self.listen)
         threads.append(listen_thread)
