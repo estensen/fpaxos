@@ -6,7 +6,7 @@
 #Create IP Delay Tables
 IP_list=( 128.111.84.146 128.111.84.157 128.111.84.160 128.111.84.161 128.111.84.165 )
 
-let "instance_no=$1 - 1"
+let "instance_no = $1 - 1"
 
 declare -A DTable
 declare -a Delays
@@ -17,7 +17,7 @@ counter=0
 for ((i=0;i<5;i++)) do
     for ((j=0;j<5;j++)) do
 	DTable[$i,$j]=${Delays[$counter]}
-	let "counter = $counter +1"
+	let "counter = $counter + 1"
     done
 done
 
@@ -27,7 +27,7 @@ sudo tc qdisc add dev $Interface root handle 1: htb
 sudo tc class add dev $Interface parent 1: classid 1:1 htb rate 1000Mbps
 
 for handle in {2..6}; do
-    let "n = $handle -2"
+    let "n = $handle - 2"
     delay=${DTable[$instance_no,$n]}
     variance=$(expr $delay / 5 + 1)
     sudo tc class add dev $Interface parent 1:1 classid 1:$handle htb rate 1000Mbps
