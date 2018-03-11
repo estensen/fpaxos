@@ -99,7 +99,7 @@ class Server:
         if log_diff > 0:
             self.request_missing_bytes(int(leader_log_len))
 
-        if proposal_id >= self.promised_id:
+        elif proposal_id >= self.promised_id:
             self.last_accepted_num = proposal_num
             self.last_accepted_proposer_id = proposer_id
             self.last_accepted_val = proposal_val
@@ -151,10 +151,16 @@ class Server:
 
     def send_log(self, addr, msg_list):
         if self.leader:
-            from_index, to_index, from_uid = msg_list[1:]
-            log_str = ",".join(map(str, self.log))
+            from_index = int(msg_list[1])
+            to_index = int(msg_list[2])
+            from_uid = int(msg_list[3])
+            # If log isn't synced the node wants all the log from from_index
+            # Maybe refuse commit item and get that item from the log sync instead?
+            log_str = ",".join(map(str, self.log[from_index:]))
+            print("Send log to resync node")
+            print("Log", log_str)
             data = "log," + log_str
-            addr = (addr[0], int(from_uid))
+            addr = (addr[0], from_uid)
             self.send_data(data, addr)
 
     def sync_log(self, msg):
@@ -167,6 +173,7 @@ class Server:
                 tickets_sold = int(el[2])
                 self.tickets_available -= tickets_sold
                 self.log.append(el)
+                self.write_to_persistent_storage(el)
             else:
                 print("## Need config change")
                 self.config_change(el)
@@ -337,10 +344,16 @@ class Server:
         if os.path.isfile(self.filename):
             with open(self.filename, 'r') as persistent_log:
                 for line in persistent_log:
-                    if el[0].isdigit():
-                        tickets_sold = int(el[2])
+                    line_list = ast.literal_eval(line)
+                    print(line_list)
+                    print(line_list[0])
+                    if line_list[0].isdigit():
+                        print("isdigit")
+                        tickets_sold = int(line_list[2])
                         self.tickets_available -= tickets_sold
-                        self.log.append(el)
+                        self.log.append(line_list)
+                print("Recovered log from persistent storage")
+                print("Log", self.log)
         else:
             with open(self.filename, 'w') as persistent_log:
                 persistent_log.write("")
