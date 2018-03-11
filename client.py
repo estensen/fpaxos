@@ -66,7 +66,7 @@ class Client:
         if milliseconds_send - prev_time > SECOND_IN_MILLISECONDS:
             avg_lat = count_lat / float(count_tput)
             with open('throughput.txt', 'a+') as tput_file:
-                tput_file.write(str(count_tput) + ' ' + str(round(avg_lat, 1)))
+                tput_file.write(str(count_tput) + ' ' + str(round(avg_lat, 1)) + '\n')
             prev_time = milliseconds_send
             count_lat = 0
             count_tput = 0
