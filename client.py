@@ -3,6 +3,7 @@ import socket
 from time import sleep, time
 from threading import Thread
 from config import cluster
+from random import randint
 
 prev_time = time()
 count_tput = 1
@@ -16,7 +17,6 @@ class Client:
         self.thread_setup()
 
     def socket_setup(self):
-        # TODO: Print identifiers in the cluster
         self.identifier = input("Which datacenter do you want to connect to? (A, B, C, D or E) ")
 
         if self.identifier not in cluster:
@@ -57,63 +57,85 @@ class Client:
         else:
             print("Couldn't recognize the command", user_input)
     
-    def stats(self, t_send, t_rcvd):
-        global tput_file
+    def save_measurement_to_files(self, milliseconds_send, milliseconds_rcvd):
         global prev_time
         global count_tput
         global count_lat
+        SECOND_IN_MILLISECONDS = 1000
 
-        if t_send - prev_time > 1000:
-            avg_lat = count_lat/float(count_tput)
-            with open('tput.txt', 'a+') as tput_file:
-                tput_file.write("Throughput (msgs per second):" + str(count_tput) + ", Avg Latency (ms):" + str(round(avg_lat, 1)) + "\n")
-            prev_time = t_send
+        if milliseconds_send - prev_time > SECOND_IN_MILLISECONDS:
+            avg_lat = count_lat / float(count_tput)
+            with open('throughput.txt', 'a+') as tput_file:
+                tput_file.write(str(count_tput) + ' ' + str(round(avg_lat, 1)) + '\n')
+            prev_time = milliseconds_send
             count_lat = 0
             count_tput = 0
 
         count_tput += 1
-        lat = abs(float(t_rcvd) - float(t_send))
-        count_lat += lat
+        latency = abs(float(milliseconds_rcvd) - float(milliseconds_send))
+        count_lat += latency
         with open('latency.txt', 'a+') as lat_file:
-            lat_file.write(str(round(lat,1)) + "\n")
+            rounded_latency = round(latency, 1)
+            lat_file.write(str(rounded_latency) + "\n")
+
+    def record_measurements(self, msg, milliseconds_rcvd):
+        if msg[0].isdigit():
+            msg_list = ast.literal_eval(msg)
+            for line in msg_list:
+                print(line)
+            milliseconds_send = float(msg_list[-1])
+        else:
+            milliseconds_send = float(msg.split(",")[-1])
+            print(msg)
+
+        self.save_measurement_to_files(milliseconds_send, milliseconds_rcvd)
+
 
     def listen(self):
         while True:
             data, addr = self.client_sock.recvfrom(BUFFER_SIZE)
             msg = data.decode("utf-8")
-            t_rcvd = time() * 1000
 
-            if msg[0].isdigit():
-                msg_list = ast.literal_eval(msg)
-                for line in msg_list:
-                    print(line)
-                t_send = float(msg_list[-1])
-                self.stats(t_send, t_rcvd)
-            else:
-                t_send = float(msg.split(",")[-1])
-                self.stats(t_send, t_rcvd)
-                print(msg)
+            milliseconds_rcvd = time() * 1000
+            self.record_measurements(msg, milliseconds_rcvd)
 
-    def user_input(self):
+    def msg_load(self):
+        msg_per_sec = 1
+        msg_count = 0
+        rate_interval = 5000
         while True:
-            user_input = input("Send msg to datacenter: ")
-            self.process_user_input(user_input)
+            interval_time_start = time() * 1000
+            while True:
+                interval_time_current = time() * 1000
+
+                if interval_time_current - interval_time_start < rate_interval:
+                    sleep_time = 1 / float(msg_per_sec)
+                    sleep(sleep_time)
+
+                    msg_count += 1
+                    num_tickets = randint(1, 100)
+                    msg_data = ('buy ' + str(num_tickets) + ' tickets')
+                    self.process_user_input(msg_data)
+                else:
+                    if msg_per_sec < 100:
+                        msg_per_sec += 1
+
+                    break
 
     def thread_setup(self):
+        msg_thread = Thread(target=self.msg_load)
+        threads.append(msg_thread)
+        msg_thread.start()
+        
         listen_thread = Thread(target=self.listen)
         threads.append(listen_thread)
         listen_thread.start()
-
-        input_thread = Thread(target=self.user_input)
-        threads.append(input_thread)
-        input_thread.start()
-
 
 def run():
     client = Client()
 
 if __name__ == "__main__":
-    with open('tput.txt', 'w') as tput_file:
+    with open('throughput.txt', 'w') as tput_file:
         tput_file.write("")
     with open('latency.txt', 'w') as tput_file:
         tput_file.write("")

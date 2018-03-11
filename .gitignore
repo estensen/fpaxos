@@ -106,3 +106,6 @@ ENV/
 
 # Ignore persistent storage logs
 *.txt
+
+# Graphs
+.*png
