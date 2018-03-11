@@ -133,15 +133,17 @@ class Server:
 
     def validate_transaction(self, addr, msg_list):
         # Compare log length
-        tickets = msg_list[3]
+        tickets = msg_list[2]
         if tickets.isdigit():
-            new_ticket_balance = self.tickets_available - int(tickets)
+            tickets = int(tickets)
+            new_ticket_balance = self.tickets_available - tickets
             if new_ticket_balance >= 0:
                 self.tickets_available = new_ticket_balance
                 print(str(self.tickets_available) + " left")
-                self.log.append(msg_list[1:])
-                self.write_to_persistent_storage(msg_list[1:])
-            self.send_client_response(addr, msg_list, new_ticket_balance)
+                self.log.append(msg_list)
+                self.write_to_persistent_storage(msg_list)
+            if addr:
+                self.send_client_response(addr, tickets, new_ticket_balance)
 
     def request_missing_bytes(self, leader_log_len):
         from_index = len(self.log)
@@ -150,6 +152,7 @@ class Server:
         self.send_data_to_others(data)
 
     def send_log(self, addr, msg_list):
+        print("Send log to resync node")
         if self.leader:
             from_index = int(msg_list[1])
             to_index = int(msg_list[2])
@@ -164,19 +167,14 @@ class Server:
             self.send_data(data, addr)
 
     def sync_log(self, msg):
+        print("Sync log")
         log_index_start = msg.index("[")
         log_elements = msg[log_index_start:]
         log_list = ast.literal_eval(log_elements)
-        self.tickets_available = self.init_tickets_available
+
         for el in log_list:
-            if el[0].isdigit():
-                tickets_sold = int(el[2])
-                self.tickets_available -= tickets_sold
-                self.log.append(el)
-                self.write_to_persistent_storage(el)
-            else:
-                print("## Need config change")
-                self.config_change(el)
+            print("el", el)
+            self.validate_transaction(None, el)
 
     def config_change(self, msg_list):
         print("msg_list", msg_list)
@@ -240,8 +238,7 @@ class Server:
             if addr != self.server_addr:
                 self.send_data(data, addr)
 
-    def send_client_response(self, addr, msg_list, new_ticket_balance):
-        tickets = msg_list[3]
+    def send_client_response(self, addr, tickets, new_ticket_balance):
         if self.client_requests and self.client_requests[1] == tickets:
             port = int(self .client_requests[2])
             addr = (addr[0], port)
@@ -302,7 +299,7 @@ class Server:
 
             # Phase 3
             elif command == "learn":
-                self.validate_transaction(addr, msg_list)
+                self.validate_transaction(addr, msg_list[1:])
 
             elif command == "missing":
                 self.send_log(addr, msg_list)
@@ -346,9 +343,7 @@ class Server:
                 for line in persistent_log:
                     line_list = ast.literal_eval(line)
                     print(line_list)
-                    print(line_list[0])
                     if line_list[0].isdigit():
-                        print("isdigit")
                         tickets_sold = int(line_list[2])
                         self.tickets_available -= tickets_sold
                         self.log.append(line_list)
