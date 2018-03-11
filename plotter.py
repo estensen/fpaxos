@@ -20,11 +20,15 @@ def graph_plotter(filename):
     plt.figure(1)
     plt.subplot(211)
     plt.plot(avg_lat_X, "ro", avg_lat_X , "b--")
-    plt.ylabel("AvgAverage Latency (ms)")
+    plt.ylabel("Avg Latency (ms)")
+    plt.xlabel("Time (sec)")
 
     plt.subplot(212)
     plt.plot(avg_tput_X, "g^", avg_tput_X ,'r--' )
     plt.ylabel("Avg Throughput (# msgs/sec)")
+    plt.xlabel("Time (sec)")
+
+    plt.subplots_adjust(hspace=0.5)
 
     plt.savefig("output.png")
 
