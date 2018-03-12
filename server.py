@@ -1,3 +1,4 @@
+import os
 import socket
 import ast
 from threading import Thread
@@ -37,6 +38,7 @@ class Server:
         self.promised_id = (0, 0)
 
         self.log = []
+        self.filename = self.identifier + ".txt"
         self.setup()
 
     def set_proposal(self, val):
@@ -97,7 +99,7 @@ class Server:
         if log_diff > 0:
             self.request_missing_bytes(int(leader_log_len))
 
-        if proposal_id >= self.promised_id:
+        elif proposal_id >= self.promised_id:
             self.last_accepted_num = proposal_num
             self.last_accepted_proposer_id = proposer_id
             self.last_accepted_val = proposal_val
@@ -131,14 +133,17 @@ class Server:
 
     def validate_transaction(self, addr, msg_list):
         # Compare log length
-        tickets = msg_list[3]
+        tickets = msg_list[2]
         if tickets.isdigit():
-            new_ticket_balance = self.tickets_available - int(tickets)
+            tickets = int(tickets)
+            new_ticket_balance = self.tickets_available - tickets
             if new_ticket_balance >= 0:
                 self.tickets_available = new_ticket_balance
                 print(str(self.tickets_available) + " left")
-                self.log.append(msg_list[1:])
-            self.send_client_response(addr, msg_list, new_ticket_balance)
+                self.log.append(msg_list)
+                self.write_to_persistent_storage(msg_list)
+            if addr:
+                self.send_client_response(addr, tickets, new_ticket_balance)
 
     def request_missing_bytes(self, leader_log_len):
         from_index = len(self.log)
@@ -147,25 +152,29 @@ class Server:
         self.send_data_to_others(data)
 
     def send_log(self, addr, msg_list):
+        print("Send log to resync node")
         if self.leader:
-            from_index, to_index, from_uid = msg_list[1:]
-            log_str = ",".join(map(str, self.log))
+            from_index = int(msg_list[1])
+            to_index = int(msg_list[2])
+            from_uid = int(msg_list[3])
+            # If log isn't synced the node wants all the log from from_index
+            # Maybe refuse commit item and get that item from the log sync instead?
+            log_str = ",".join(map(str, self.log[from_index:]))
+            print("Send log to resync node")
+            print("Log", log_str)
             data = "log," + log_str
-            addr = (addr[0], int(from_uid))
+            addr = (addr[0], from_uid)
             self.send_data(data, addr)
 
     def sync_log(self, msg):
+        print("Sync log")
         log_index_start = msg.index("[")
         log_elements = msg[log_index_start:]
         log_list = ast.literal_eval(log_elements)
-        self.tickets_available = self.init_tickets_available
+
         for el in log_list:
-            if el[0].isdigit():
-                self.tickets_available -= int(el[2])
-                self.log.append(el)
-            else:
-                print("## Need config change")
-                self.config_change(el)
+            print("el", el)
+            self.validate_transaction(None, el)
 
     def config_change(self, msg_list):
         print("msg_list", msg_list)
@@ -229,8 +238,7 @@ class Server:
             if addr != self.server_addr:
                 self.send_data(data, addr)
 
-    def send_client_response(self, addr, msg_list, new_ticket_balance):
-        tickets = msg_list[3]
+    def send_client_response(self, addr, tickets, new_ticket_balance):
         if self.client_requests and self.client_requests[1] == tickets:
             port = int(self .client_requests[2])
             addr = (addr[0], port)
@@ -291,7 +299,7 @@ class Server:
 
             # Phase 3
             elif command == "learn":
-                self.validate_transaction(addr, msg_list)
+                self.validate_transaction(addr, msg_list[1:])
 
             elif command == "missing":
                 self.send_log(addr, msg_list)
@@ -329,11 +337,34 @@ class Server:
                 if delta > heartbeat_delta:
                     self.send_prepare()
 
+    def load_log_from_persistent_storage(self):
+        if os.path.isfile(self.filename):
+            with open(self.filename, 'r') as persistent_log:
+                for line in persistent_log:
+                    line_list = ast.literal_eval(line)
+                    print(line_list)
+                    if line_list[0].isdigit():
+                        tickets_sold = int(line_list[2])
+                        self.tickets_available -= tickets_sold
+                        self.log.append(line_list)
+                print("Recovered log from persistent storage")
+                print("Log", self.log)
+        else:
+            with open(self.filename, 'w') as persistent_log:
+                persistent_log.write("")
+
+    def write_to_persistent_storage(self, log_item):
+        with open(self.filename, 'a') as persistent_log:
+            line = str(log_item) + '\n'
+            persistent_log.write(line)
+
     def setup(self):
         self.sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
         self.sock.bind(self.server_addr)
         print("Server socket created")
         print("Server addr:", self.server_addr)
+
+        self.load_log_from_persistent_storage()
 
         listen_thread = Thread(target=self.listen)
         threads.append(listen_thread)

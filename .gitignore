@@ -104,5 +104,8 @@ ENV/
 *.DS_Store
 .idea/
 
+# Ignore persistent storage logs
+*.txt
+
 # Graphs
 .*png
