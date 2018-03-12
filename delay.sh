@@ -2,13 +2,13 @@
 #Program to simulate network delay between nodes
 #Currently includes delays corresponding to a network of the following 5 AWS
 # datacenters: California, Oregon, Virginia, Ireland, Sao Paolo
-# Run as follows: "./delay.sh <instance_number>
+# Run as follows: ./delay.sh <instance_number>
 
 
 #Create IP Delay Tables
 IP_list=( 128.111.84.146 128.111.84.157 128.111.84.160 128.111.84.161 128.111.84.165 )
 
-let "instance_no= $1 - 1"
+let "instance_no = $1 - 1"
 
 declare -A DTable
 declare -A SDMatrix
@@ -40,7 +40,7 @@ sudo tc qdisc add dev $Interface root handle 1: htb
 sudo tc class add dev $Interface parent 1: classid 1:1 htb rate 1000Mbps
 
 for handle in {2..6}; do
-    let "n = $handle -2"
+    let "n = $handle - 2"
     delay=${DTable[$instance_no,$n]}
     variance=${SDMatrix[$instance_no,$n]}
     
