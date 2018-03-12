@@ -90,11 +90,11 @@ class Client:
 
         self.save_measurement_to_files(milliseconds_send, milliseconds_rcvd)
 
-
     def listen(self):
         while True:
             data, addr = self.client_sock.recvfrom(BUFFER_SIZE)
             msg = data.decode("utf-8")
+            print(msg + " from " + addr)
 
             milliseconds_rcvd = time() * 1000
             self.record_measurements(msg, milliseconds_rcvd)
@@ -114,7 +114,7 @@ class Client:
 
                     msg_count += 1
                     num_tickets = randint(1, 100)
-                    msg_data = ('buy ' + str(num_tickets) + ' tickets')
+                    msg_data = ('buy ' + str(num_tickets))
                     self.process_user_input(msg_data)
                 else:
                     if msg_per_sec < 100:
@@ -132,11 +132,12 @@ class Client:
         listen_thread.start()
 
 def run():
-    client = Client()
+    Client()
 
 if __name__ == "__main__":
     with open('throughput.txt', 'w') as tput_file:
         tput_file.write("")
     with open('latency.txt', 'w') as tput_file:
         tput_file.write("")
+
     run()
