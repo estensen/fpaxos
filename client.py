@@ -92,9 +92,9 @@ class Client:
 
     def listen(self):
         while True:
-            data, addr = self.client_sock.recvfrom(BUFFER_SIZE)
+            data, _ = self.client_sock.recvfrom(BUFFER_SIZE)
             msg = data.decode("utf-8")
-            print(msg + " from " + addr)
+            print(msg)
 
             milliseconds_rcvd = time() * 1000
             self.record_measurements(msg, milliseconds_rcvd)
