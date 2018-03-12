@@ -5,6 +5,7 @@ An implementation of Flexible Paxos made to test throughput and latency at leade
 ## Installing
 ```
 brew install python
+pip install -r requirements.txt
 ```
 
 ## Setup
