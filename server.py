@@ -230,17 +230,19 @@ class Server:
             print("Message {} sent to {}".format(data, addr))
 
     def send_data_to_all(self, data):
-        for identifier, addr in self.cluster.items():
+        for _, addr in self.cluster.items():
             self.send_data(data, addr)
 
     def send_data_to_others(self, data):
-        for identifier, addr in self.cluster.items():
+        for _, addr in self.cluster.items():
             if addr != self.server_addr:
                 self.send_data(data, addr)
 
     def send_client_response(self, addr, tickets, new_ticket_balance):
+        tickets = str(tickets)
+
         if self.client_requests and self.client_requests[1] == tickets:
-            port = int(self .client_requests[2])
+            port = int(self.client_requests[2])
             addr = (addr[0], port)
 
             milliseconds = self.client_requests[3]
