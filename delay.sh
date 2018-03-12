@@ -1,6 +1,6 @@
 #!/bin/bash
 #Program to simulate network delay between nodes
-# Run as follows: "./tc_new.sh <instance_number>
+# Run as follows: ./delay.sh <instance_number>
 
 
 #Create IP Delay Tables
