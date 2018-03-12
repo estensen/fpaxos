@@ -1,5 +1,7 @@
 #!/bin/bash
 #Program to simulate network delay between nodes
+#Currently includes delays corresponding to a network of the following 5 AWS
+# datcenters: California, Oregon, Virginia, Ireland, Sao Paolo
 # Run as follows: ./delay.sh <instance_number>
 
 
