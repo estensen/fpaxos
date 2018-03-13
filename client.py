@@ -87,7 +87,6 @@ class Client:
             milliseconds_send = float(msg_list[-1])
         else:
             milliseconds_send = float(msg.split(",")[-1])
-            print(msg)
 
         self.save_measurement_to_files(milliseconds_send, milliseconds_rcvd)
 
