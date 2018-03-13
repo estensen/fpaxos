@@ -4,10 +4,11 @@ from time import sleep, time
 from threading import Thread
 from config import cluster
 from random import randint
+from statistics import median
 
 prev_time = time()
 count_tput = 1
-count_lat = 0
+latencies = []
 BUFFER_SIZE = 1024
 threads = []
 
@@ -60,23 +61,22 @@ class Client:
     def save_measurement_to_files(self, milliseconds_send, milliseconds_rcvd):
         global prev_time
         global count_tput
-        global count_lat
-        SECOND_IN_MILLISECONDS = 1000
-
-        if milliseconds_send - prev_time > SECOND_IN_MILLISECONDS:
-            avg_lat = count_lat / float(count_tput)
-            with open('throughput.txt', 'a+') as tput_file:
-                tput_file.write(str(count_tput) + ' ' + str(round(avg_lat, 1)) + '\n')
-            prev_time = milliseconds_send
-            count_lat = 0
-            count_tput = 0
+        global latencies
+        THROUGHPUT_EVERY_MILLISECONDS = 5000
+        LATENCY_EVERY_MILLISECONDS = 1000
 
         count_tput += 1
         latency = abs(float(milliseconds_rcvd) - float(milliseconds_send))
-        count_lat += latency
-        with open('latency.txt', 'a+') as lat_file:
-            rounded_latency = round(latency, 1)
-            lat_file.write(str(rounded_latency) + "\n")
+        latencies.append(latency)
+
+        if milliseconds_send - prev_time > THROUGHPUT_EVERY_MILLISECONDS:
+            median_lat = round(median(latencies), 1)
+
+            with open('throughput_latency.txt', 'a+') as tput_file:
+                tput_file.write(str(count_tput/5.0) + ' ' + str(median_lat) + '\n')
+            prev_time = milliseconds_send
+            latencies = []
+            count_tput = 0
 
     def record_measurements(self, msg, milliseconds_rcvd):
         if msg[0].isdigit():
@@ -86,7 +86,6 @@ class Client:
             milliseconds_send = float(msg_list[-1])
         else:
             milliseconds_send = float(msg.split(",")[-1])
-            print(msg)
 
         self.save_measurement_to_files(milliseconds_send, milliseconds_rcvd)
 
@@ -135,9 +134,6 @@ def run():
     Client()
 
 if __name__ == "__main__":
-    with open('throughput.txt', 'w') as tput_file:
+    with open('throughput_latency.txt', 'w') as tput_file:
         tput_file.write("")
-    with open('latency.txt', 'w') as tput_file:
-        tput_file.write("")
-
     run()
