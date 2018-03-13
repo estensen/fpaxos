@@ -35,7 +35,7 @@ def graph_plotter(filename): #, filename2):
 #    plt.plot(avg_lat_M, avg_tput_M , 'b^')
 #    plt.plot(avg_lat_M, avg_tput_M , 'r')
 
-    plt.ylabel("Avg Latency (ms)")
+    plt.ylabel("Median Latency (ms)")
     plt.xlabel("Throughput (#msgs/sec)")
 
     plt.savefig("output.png")
