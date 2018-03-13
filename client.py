@@ -109,7 +109,7 @@ class Client:
 
                 if interval_time_current - interval_time_start < rate_interval:
                     sleep_time = 1 / float(msg_per_sec)
-                    sleep(0.1)
+                    sleep(sleep_time)
 
                     msg_count += 1
                     num_tickets = randint(1, 100)
@@ -117,7 +117,7 @@ class Client:
                     self.process_user_input(msg_data)
                 else:
                     if msg_per_sec < 100:
-                        msg_per_sec += 1
+                        msg_per_sec += 5
 
                     break
 
