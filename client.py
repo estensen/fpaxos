@@ -4,10 +4,11 @@ from time import sleep, time
 from threading import Thread
 from config import cluster
 from random import randint
+from statistics import median
 
 prev_time = time()
 count_tput = 1
-count_lat = 0
+latencies = []
 BUFFER_SIZE = 1024
 threads = []
 
@@ -60,27 +61,23 @@ class Client:
     def save_measurement_to_files(self, milliseconds_send, milliseconds_rcvd):
         global prev_time
         global count_tput
-        global count_lat
+        global latencies
         THROUGHPUT_EVERY_MILLISECONDS = 5000
         LATENCY_EVERY_MILLISECONDS = 1000
 
         if milliseconds_send - prev_time > THROUGHPUT_EVERY_MILLISECONDS:
-            avg_lat = count_lat / float(count_tput)
-            with open('throughput_latency.txt', 'a+') as tput_file:
-                tput_file.write(str(count_tput/5.0) + ' ' + str(round(avg_lat, 1)) + '\n')
-            prev_time = milliseconds_send
-            count_lat = 0
-            count_tput = 0
+            if latencies:
+                median_lat = round(median(latencies), 1)
+
+                with open('throughput_latency.txt', 'a+') as tput_file:
+                    tput_file.write(str(count_tput/5.0) + ' ' + str(median_lat) + '\n')
+                prev_time = milliseconds_send
+                median_lat = []
+                count_tput = 0
 
         count_tput += 1
         latency = abs(float(milliseconds_rcvd) - float(milliseconds_send))
-        count_lat += latency
-
-        if milliseconds_send - prev_time > LATENCY_EVERY_MILLISECONDS:
-            avg_latency = count_lat / float(count_tput)
-            rounded_latency = round(avg_latency, 1)
-            with open('latency.txt', 'a+') as lat_file:
-                lat_file.write(str(rounded_latency) + '\n')
+        latencies.append(latency)
 
     def record_measurements(self, msg, milliseconds_rcvd):
         if msg[0].isdigit():
@@ -140,7 +137,5 @@ def run():
 
 if __name__ == "__main__":
     with open('throughput.txt', 'w') as tput_file:
-        tput_file.write("")
-    with open('latency.txt', 'w') as tput_file:
         tput_file.write("")
     run()
