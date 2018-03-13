@@ -136,6 +136,6 @@ def run():
     Client()
 
 if __name__ == "__main__":
-    with open('throughput.txt', 'w') as tput_file:
+    with open('throughput_latency.txt', 'w') as tput_file:
         tput_file.write("")
     run()
