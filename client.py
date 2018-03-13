@@ -65,19 +65,18 @@ class Client:
         THROUGHPUT_EVERY_MILLISECONDS = 5000
         LATENCY_EVERY_MILLISECONDS = 1000
 
-        if milliseconds_send - prev_time > THROUGHPUT_EVERY_MILLISECONDS:
-            if latencies:
-                median_lat = round(median(latencies), 1)
-
-                with open('throughput_latency.txt', 'a+') as tput_file:
-                    tput_file.write(str(count_tput/5.0) + ' ' + str(median_lat) + '\n')
-                prev_time = milliseconds_send
-                median_lat = []
-                count_tput = 0
-
         count_tput += 1
         latency = abs(float(milliseconds_rcvd) - float(milliseconds_send))
         latencies.append(latency)
+
+        if milliseconds_send - prev_time > THROUGHPUT_EVERY_MILLISECONDS:
+            median_lat = round(median(latencies), 1)
+
+            with open('throughput_latency.txt', 'a+') as tput_file:
+                tput_file.write(str(count_tput/5.0) + ' ' + str(median_lat) + '\n')
+            prev_time = milliseconds_send
+            latencies = []
+            count_tput = 0
 
     def record_measurements(self, msg, milliseconds_rcvd):
         if msg[0].isdigit():
