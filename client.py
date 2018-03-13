@@ -61,12 +61,13 @@ class Client:
         global prev_time
         global count_tput
         global count_lat
-        SECOND_IN_MILLISECONDS = 1000
+        THROUGHPUT_EVERY_MILLISECONDS = 5000
+        LATENCY_EVERY_MILLISECONDS = 1000
 
-        if milliseconds_send - prev_time > SECOND_IN_MILLISECONDS:
+        if milliseconds_send - prev_time > THROUGHPUT_EVERY_MILLISECONDS:
             avg_lat = count_lat / float(count_tput)
-            with open('throughput.txt', 'a+') as tput_file:
-                tput_file.write(str(count_tput) + ' ' + str(round(avg_lat, 1)) + '\n')
+            with open('throughput_latency.txt', 'a+') as tput_file:
+                tput_file.write(str(count_tput/5.0) + ' ' + str(round(avg_lat, 1)) + '\n')
             prev_time = milliseconds_send
             count_lat = 0
             count_tput = 0
@@ -74,9 +75,12 @@ class Client:
         count_tput += 1
         latency = abs(float(milliseconds_rcvd) - float(milliseconds_send))
         count_lat += latency
-        with open('latency.txt', 'a+') as lat_file:
-            rounded_latency = round(latency, 1)
-            lat_file.write(str(rounded_latency) + "\n")
+
+        if milliseconds_send - prev_time > LATENCY_EVERY_MILLISECONDS:
+            avg_latency = count_lat / float(count_tput)
+            rounded_latency = round(avg_latency, 1)
+            with open('latency.txt', 'a+') as lat_file:
+                lat_file.write(str(rounded_latency) + '\n')
 
     def record_measurements(self, msg, milliseconds_rcvd):
         if msg[0].isdigit():
@@ -139,5 +143,4 @@ if __name__ == "__main__":
         tput_file.write("")
     with open('latency.txt', 'w') as tput_file:
         tput_file.write("")
-
     run()
