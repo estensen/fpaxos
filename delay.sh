@@ -6,7 +6,7 @@
 
 
 #Create IP Delay Tables
-IP_list=( 128.111.84.146 128.111.84.157 128.111.84.160 128.111.84.161 128.111.84.165 )
+IP_list=( 128.111.84.146 128.111.84.157 128.111.84.160 128.111.84.165 128.111.84.167 )
 
 let "instance_no = $1 - 1"
 
@@ -14,8 +14,8 @@ declare -A DTable
 declare -A SDMatrix
 declare -a Delays
 declare -a std_devs
-Delays=(1 22 65 136 185 22 1 88 125 182 65 88 1 73 121 136 125 73 1 185 185 182 121 185 1)
-std_devs=(1 2 13 5 11 2 1 14 2 11 13 14 16 13 16 5 2 13 1 12 13 12 17 13 11)
+Delays=(1 22 65 136 185 0 1 88 125 182 0 0 1 73 121 0 0 0 1 185 0 0 0 0 1)
+std_devs=(1 2 13 5 11 0 1 14 2 11 0 0 16 13 16 0 0 0 1 12 0 0 0 0 11)
 counter=0
 
 #Load avg delay table
@@ -43,10 +43,11 @@ for handle in {2..6}; do
     let "n = $handle - 2"
     delay=${DTable[$instance_no,$n]}
     variance=${SDMatrix[$instance_no,$n]}
-    
-    sudo tc class add dev $Interface parent 1:1 classid 1:$handle htb rate 1000Mbps
-    sudo tc qdisc add dev $Interface handle $handle: parent 1:$handle netem delay ${delay}ms ${variance}ms distribution normal 
+    if ((delay > 0)); then
+        sudo tc class add dev $Interface parent 1:1 classid 1:$handle htb rate 1000Mbps
+        sudo tc qdisc add dev $Interface handle $handle: parent 1:$handle netem delay ${delay}ms ${variance}ms distribution normal 
 
-    sudo tc filter add dev $Interface pref $handle protocol ip parent 1:0  u32 match ip dst ${IP_list[$n]} flowid 1:$handle
+        sudo tc filter add dev $Interface pref $handle protocol ip parent 1:0  u32 match ip dst ${IP_list[$n]} flowid 1:$handle
+    fi
 
 done
