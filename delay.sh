@@ -45,8 +45,8 @@ for handle in {2..6}; do
     variance=${SDMatrix[$instance_no,$n]}
     if ((delay > 0)); then
         sudo tc class add dev $Interface parent 1:1 classid 1:$handle htb rate 1000Mbps
-        sudo tc qdisc add dev $Interface handle $handle: parent 1:$handle netem delay ${delay}ms ${variance}ms distribution normal 
-
+       # sudo tc qdisc add dev $Interface handle $handle: parent 1:$handle netem delay ${delay}ms ${variance}ms distribution normal 
+        sudo tc qdisc add dev $Interface handle $handle: parent 1:$handle netem delay ${delay}ms
         sudo tc filter add dev $Interface pref $handle protocol ip parent 1:0  u32 match ip dst ${IP_list[$n]} flowid 1:$handle
     fi
 

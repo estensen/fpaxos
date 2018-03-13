@@ -109,7 +109,7 @@ class Client:
 
                 if interval_time_current - interval_time_start < rate_interval:
                     sleep_time = 1 / float(msg_per_sec)
-                    sleep(sleep_time)
+                    sleep(0.1)
 
                     msg_count += 1
                     num_tickets = randint(1, 100)
