@@ -243,10 +243,11 @@ class Server:
         tickets = str(tickets)
 
         if self.client_requests and self.client_requests[1] == tickets:
-            port = int(self.client_requests[2])
+            ip = self.client_requests[2]
+            port = int(self.client_requests[3])
             addr = (addr[0], port)
 
-            milliseconds = self.client_requests[3]
+            milliseconds = self.client_requests[4]
 
             if new_ticket_balance >= 0:
                 data = "Here's your " + tickets + " ticket(s)," + milliseconds
