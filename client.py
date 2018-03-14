@@ -62,7 +62,7 @@ class Client:
         global prev_time
         global count_tput
         global latencies
-        THROUGHPUT_EVERY_MILLISECONDS = 5000
+        THROUGHPUT_EVERY_MILLISECONDS = 1000
         LATENCY_EVERY_MILLISECONDS = 1000
 
         count_tput += 1
@@ -73,7 +73,7 @@ class Client:
             median_lat = round(median(latencies), 1)
 
             with open('throughput_latency.txt', 'a+') as tput_file:
-                tput_file.write(str(count_tput/5.0) + ' ' + str(median_lat) + '\n')
+                tput_file.write(str(count_tput) + ' ' + str(median_lat) + '\n')
             prev_time = milliseconds_send
             latencies = []
             count_tput = 0
@@ -101,7 +101,7 @@ class Client:
     def msg_load(self):
         msg_per_sec = 1
         msg_count = 0
-        rate_interval = 5000
+        rate_interval = 1000
         while True:
             interval_time_start = time() * 1000
             while True:
@@ -117,7 +117,7 @@ class Client:
                     self.process_user_input(msg_data)
                 else:
                     if msg_per_sec < 100:
-                        msg_per_sec += 5
+                        msg_per_sec += 0.1
 
                     break
 
