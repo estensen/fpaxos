@@ -73,7 +73,7 @@ class Client:
             median_lat = round(median(latencies), 1)
 
             with open('throughput_latency.txt', 'a+') as tput_file:
-                tput_file.write(str(count_tput) + ' ' + str(median_lat) + '\n')
+                tput_file.write(str(count_tput) + ' ' + str(median_lat) + ' ' + str(milliseconds_rcvd) '\n')
             prev_time = milliseconds_send
             latencies = []
             count_tput = 0
@@ -109,7 +109,7 @@ class Client:
 
                 if interval_time_current - interval_time_start < rate_interval:
                     sleep_time = 1 / float(msg_per_sec)
-                    sleep(sleep_time)
+                    sleep(0.1)
 
                     msg_count += 1
                     num_tickets = randint(1, 100)
