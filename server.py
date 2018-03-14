@@ -22,8 +22,8 @@ class Server:
         self.server_addr = server_addr
         self.cluster = cluster
         # Quorum sizes are hardcoded for now to expect 5 nodes
-        self.quorum1_size = 3
-        self.quorum2_size = 3
+        self.quorum1_size = 4
+        self.quorum2_size = 2
 
         self.init_tickets_available = 1000000000
         self.tickets_available = self.init_tickets_available
