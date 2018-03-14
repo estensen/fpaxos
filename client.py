@@ -73,7 +73,7 @@ class Client:
             median_lat = round(median(latencies), 1)
 
             with open('throughput_latency.txt', 'a+') as tput_file:
-                tput_file.write(str(count_tput) + ' ' + str(median_lat) + ' ' + str(milliseconds_rcvd) '\n')
+                tput_file.write(str(count_tput) + ' ' + str(median_lat) + ' ' + str(milliseconds_rcvd) + '\n')
             prev_time = milliseconds_send
             latencies = []
             count_tput = 0
