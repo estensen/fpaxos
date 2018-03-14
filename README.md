@@ -1,22 +1,20 @@
 # FPaxos
-An implementation of Flexible Paxos made to test throughput and latency at leader failure
+A (naive) implementation of Flexible Paxos made to test throughput and latency at leader failure
 
 # Getting Started
+## Prerequisites
+- Python 3
+- pip3
+
 ## Installing
 ```
-brew install python
-pip install -r requirements.txt
+pip3 install -r requirements.txt
 ```
 
 ## Setup
-Paxos is here configured to run with 5 nodes
+Paxos is here configured to run with 5 nodes locally
+If you want to run it in the cloud change the IP addresses in `config.py`
 
 Run `python main.py` in 5 separate terminal windows and us a unique identifier (A-E) for each window
 
-Run `python client.py` in another terminal window and select the node you want to connect to
-
-## Client commands
-1. buy numOfTickets
-2. show
-	- First line: State of state machine
-	- Following lines show committed logs
+Run `python client.py` in another terminal window. It will connect to all the nodes and send an increasingly amount of messages.
