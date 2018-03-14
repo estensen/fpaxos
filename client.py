@@ -18,7 +18,7 @@ class Client:
         self.thread_setup()
 
     def socket_setup(self):
-        self.server_identifiers = ['A', 'B', 'C', 'E', 'E']
+        self.server_identifiers = ['A', 'B', 'C', 'D', 'E']
         self.identifiers = ['a', 'b', 'c', 'd', 'e']
         self.server_addrs = {}
         self.server_socks = {}
