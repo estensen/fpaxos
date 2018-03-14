@@ -2,7 +2,7 @@ import ast
 import socket
 from time import sleep, time
 from threading import Thread
-from config import cluster
+from config import clients, cluster
 from random import randint
 from statistics import median
 
@@ -18,16 +18,22 @@ class Client:
         self.thread_setup()
 
     def socket_setup(self):
-        self.identifier = input("Which datacenter do you want to connect to? (A, B, C, D or E) ")
+        self.server_identifier = input("Which datacenter do you want to connect to? (A, B, C, D or E) ")
+        self.identifier = input("Which client are you? (a, b, c, d or e) ")
 
-        if self.identifier not in cluster:
+        if self.server_identifier not in cluster:
             ip = input("IP: ")
             port = int(input("Port: "))
             self.server_addr = (ip, port)
         else:
-            self.server_addr = cluster[self.identifier]
+            self.server_addr = cluster[self.server_identifier]
 
-        self.client_addr = (self.server_addr[0], self.server_addr[1] + 10)
+        if self.identifier not in clients:
+            ip = input("IP: ")
+            port = int(input("Port: "))
+            self.client_addr = (ip, port)
+        else:
+            self.client_addr = clients[self.identifier]
 
         self.server_sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
         self.client_sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
