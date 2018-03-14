@@ -202,7 +202,8 @@ class Server:
             self.proposal_val = amount
             self.send_accepts()
         else:
-            if from_uid not in self.get_server_uids():
+            if msg_list[-1] != "redirected" and from_uid not in self.get_server_uids():
+                msg += ",redirected"
                 self.send_data_to_others(msg)
                 print("Have to relay to leader")
 
