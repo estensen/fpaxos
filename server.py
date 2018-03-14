@@ -245,7 +245,7 @@ class Server:
         if self.client_requests and self.client_requests[1] == tickets:
             ip = self.client_requests[2]
             port = int(self.client_requests[3])
-            addr = (addr[0], port)
+            addr = (ip, port)
 
             milliseconds = self.client_requests[4]
 
