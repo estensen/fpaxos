@@ -2,6 +2,7 @@ import ast
 import socket
 from time import sleep, time
 from threading import Thread, Lock
+from queue import Queue
 from config import clients, cluster
 from random import randint
 from statistics import median
@@ -25,6 +26,8 @@ class Client:
         self.client_addrs = {}
         self.client_socks = {}
 
+        self.incoming_queues = {}
+
         for identifier in self.server_identifiers:
             self.server_addrs[identifier] = cluster[identifier]
             self.server_socks[identifier] = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
@@ -33,6 +36,7 @@ class Client:
             self.client_addrs[identifier] = clients[identifier]
             self.client_socks[identifier] = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
             self.client_socks[identifier].bind(self.client_addrs[identifier])
+            self.incoming_queues[identifier] = Queue()
 
 
     def send_msg(self, data, identifier):
@@ -107,10 +111,19 @@ class Client:
             print(msg)
 
             milliseconds_rcvd = time() * 1000
-            self.record_measurements(msg, milliseconds_rcvd, identifier)
+
+            self.incoming_queues[identifier].put((msg, milliseconds_rcvd))
+
+    def pop_incoming_queue(self, identifier):
+        while True:
+            if not self.incoming_queues[identifier].empty():
+                print("self.incoming_queues[identifier]", self.incoming_queues[identifier].get())
+                msg, milliseconds_rcvd = self.incoming_queues[identifier].get()
+                self.record_measurements(msg, milliseconds_rcvd, identifier)
 
     def msg_load(self, identifier):
-        msg_per_sec = 0.2
+        sleep(1)
+        msg_per_sec = 1
         msg_count = 0
         rate_interval = 5000
         while True:
@@ -137,6 +150,7 @@ class Client:
 
         msg_threads = {}
         listen_threads = {}
+        pop_queue_threads = {}
 
         for identifier in self.identifiers:
             msg_threads[identifier] = Thread(target=self.msg_load, args=(identifier, ))
@@ -144,6 +158,9 @@ class Client:
 
             listen_threads[identifier] = Thread(target=self.listen, args=(identifier, ))
             listen_threads[identifier].start()
+
+            pop_queue_threads[identifier] = Thread(target=self.pop_incoming_queue, args=(identifier, ))
+            pop_queue_threads[identifier].start()
 
 def run():
     Client()
