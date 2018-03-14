@@ -1,8 +1,8 @@
 import ast
 import socket
 from time import sleep, time
-from threading import Thread
-from config import cluster
+from threading import Thread, Lock
+from config import clients, cluster
 from random import randint
 from statistics import median
 
@@ -18,27 +18,30 @@ class Client:
         self.thread_setup()
 
     def socket_setup(self):
-        self.identifier = input("Which datacenter do you want to connect to? (A, B, C, D or E) ")
+        self.server_identifiers = ['A', 'B', 'C', 'D', 'E']
+        self.identifiers = ['a', 'b', 'c', 'd', 'e']
+        self.server_addrs = {}
+        self.server_socks = {}
+        self.client_addrs = {}
+        self.client_socks = {}
 
-        if self.identifier not in cluster:
-            ip = input("IP: ")
-            port = int(input("Port: "))
-            self.server_addr = (ip, port)
-        else:
-            self.server_addr = cluster[self.identifier]
+        for identifier in self.server_identifiers:
+            self.server_addrs[identifier] = cluster[identifier]
+            self.server_socks[identifier] = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
 
-        self.client_addr = (self.server_addr[0], self.server_addr[1] + 10)
+        for identifier in self.identifiers:
+            self.client_addrs[identifier] = clients[identifier]
+            self.client_socks[identifier] = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
+            self.client_socks[identifier].bind(self.client_addrs[identifier])
 
-        self.server_sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
-        self.client_sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
-        self.client_sock.bind(self.client_addr)
 
-    def send_msg(self, data):
+    def send_msg(self, data, identifier):
+        identifier = identifier.upper()
         msg = bytes(data, encoding="ascii")
-        self.server_sock.sendto(msg, self.server_addr)
-        print("Message sent to", self.server_addr)
+        self.server_socks[identifier].sendto(msg, self.server_addrs[identifier])
+        print("{} sent to {}".format(msg, self.server_addrs[identifier]))
 
-    def process_user_input(self, user_input):
+    def process_user_input(self, user_input, identifier):
         words = user_input.split(" ")
         command = words[0]
         if len(words) > 1:
@@ -47,29 +50,37 @@ class Client:
         milliseconds = time() * 1000
 
         if command == "show" or command == "random":
-            self.send_msg("{},{},{}".format(command, str(self.client_addr[1]), str(milliseconds)))
+            self.send_msg("{},{},{},{}".format(command,  self.s[identifier][0], self.client_addrs[identifier][1], str(milliseconds)), identifier)
         elif command == "buy" and arg.isdigit():
-            self.send_msg("{},{},{},{}".format(command, arg, self.client_addr[1], str(milliseconds)))
+            self.send_msg("{},{},{},{},{}".format(command, arg, self.client_addrs[identifier][0], self.client_addrs[identifier][1], str(milliseconds)), identifier)
         elif command == "change":
             # Kill listen_thread before changing server_sock
             self.server_sock.close()
-            self.client_sock.close()
+
+            for client_sock in self.client_socks:
+                client_sock.close()
+
             self.socket_setup()
         else:
             print("Couldn't recognize the command", user_input)
     
-    def save_measurement_to_files(self, milliseconds_send, milliseconds_rcvd):
+    def save_measurement_to_files(self, milliseconds_send, milliseconds_rcvd, identifier):
         global prev_time
         global count_tput
         global latencies
         THROUGHPUT_EVERY_MILLISECONDS = 5000
         LATENCY_EVERY_MILLISECONDS = 1000
 
-        count_tput += 1
-        latency = abs(float(milliseconds_rcvd) - float(milliseconds_send))
-        latencies.append(latency)
 
-        if milliseconds_send - prev_time > THROUGHPUT_EVERY_MILLISECONDS:
+        latency = abs(float(milliseconds_rcvd) - float(milliseconds_send))
+
+        self.lock.acquire()
+        count_tput += 1
+        latencies.append(latency)
+        self.lock.release()
+
+
+        if milliseconds_send - prev_time > THROUGHPUT_EVERY_MILLISECONDS and identifier == 'a':
             median_lat = round(median(latencies), 1)
 
             with open('throughput_latency.txt', 'a+') as tput_file:
@@ -78,7 +89,7 @@ class Client:
             latencies = []
             count_tput = 0
 
-    def record_measurements(self, msg, milliseconds_rcvd):
+    def record_measurements(self, msg, milliseconds_rcvd, identifier):
         if msg[0].isdigit():
             msg_list = ast.literal_eval(msg)
             for line in msg_list:
@@ -87,19 +98,19 @@ class Client:
         else:
             milliseconds_send = float(msg.split(",")[-1])
 
-        self.save_measurement_to_files(milliseconds_send, milliseconds_rcvd)
+        self.save_measurement_to_files(milliseconds_send, milliseconds_rcvd, identifier)
 
-    def listen(self):
+    def listen(self, identifier):
         while True:
-            data, _ = self.client_sock.recvfrom(BUFFER_SIZE)
+            data, _ = self.client_socks[identifier].recvfrom(BUFFER_SIZE)
             msg = data.decode("utf-8")
             print(msg)
 
             milliseconds_rcvd = time() * 1000
-            self.record_measurements(msg, milliseconds_rcvd)
+            self.record_measurements(msg, milliseconds_rcvd, identifier)
 
-    def msg_load(self):
-        msg_per_sec = 1
+    def msg_load(self, identifier):
+        msg_per_sec = 0.2
         msg_count = 0
         rate_interval = 5000
         while True:
@@ -114,21 +125,25 @@ class Client:
                     msg_count += 1
                     num_tickets = randint(1, 100)
                     msg_data = ('buy ' + str(num_tickets))
-                    self.process_user_input(msg_data)
+                    self.process_user_input(msg_data, identifier)
                 else:
                     if msg_per_sec < 100:
-                        msg_per_sec += 1
+                        msg_per_sec += 0.2
 
                     break
 
     def thread_setup(self):
-        msg_thread = Thread(target=self.msg_load)
-        threads.append(msg_thread)
-        msg_thread.start()
-        
-        listen_thread = Thread(target=self.listen)
-        threads.append(listen_thread)
-        listen_thread.start()
+        self.lock = Lock()
+
+        msg_threads = {}
+        listen_threads = {}
+
+        for identifier in self.identifiers:
+            msg_threads[identifier] = Thread(target=self.msg_load, args=(identifier, ))
+            msg_threads[identifier].start()
+
+            listen_threads[identifier] = Thread(target=self.listen, args=(identifier, ))
+            listen_threads[identifier].start()
 
 def run():
     Client()
