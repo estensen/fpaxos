@@ -74,10 +74,10 @@ class Client:
 
         latency = abs(float(milliseconds_rcvd) - float(milliseconds_send))
 
-        #self.lock.acquire()
+        self.lock.acquire()
         count_tput += 1
         latencies.append(latency)
-        #self.lock.release()
+        self.lock.release()
 
 
         if milliseconds_send - prev_time > THROUGHPUT_EVERY_MILLISECONDS and identifier == 'a':
@@ -110,7 +110,7 @@ class Client:
             self.record_measurements(msg, milliseconds_rcvd, identifier)
 
     def msg_load(self, identifier):
-        msg_per_sec = 1
+        msg_per_sec = 0.2
         msg_count = 0
         rate_interval = 5000
         while True:

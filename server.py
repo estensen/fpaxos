@@ -4,6 +4,7 @@ import ast
 from threading import Thread
 from random import choice, random
 from math import ceil
+from queue import Queue
 from time import sleep, time
 from config import cluster
 
@@ -17,6 +18,7 @@ class Server:
     def __init__(self, identifier, server_addr):
         self.uid = server_addr[1]
         self.leader = False
+        self.leader_queue = Queue()
         self.last_recv_heartbeat = None
         self.identifier = identifier
         self.server_addr = server_addr
@@ -121,7 +123,7 @@ class Server:
             if not self.leader:
                 self.leader = True
                 self.send_data_to_all("heartbeat")
-                print("I am leader")
+                print("###I am leader###")
             self.send_learn()
 
     def send_learn(self):
@@ -194,13 +196,11 @@ class Server:
 
     def recv_buy(self, msg, from_uid):
         msg_list = msg.split(",")
-        amount = msg_list[1]
 
         if self.leader:
             print("Will buy")
-            self.client_requests = msg_list
-            self.proposal_val = amount
-            self.send_accepts()
+            self.leader_queue.put(msg_list)
+            self.pop_leader_queue()
         else:
             if msg_list[-1] != "redirected" and from_uid not in self.get_server_uids():
                 msg += ",redirected"
@@ -255,6 +255,15 @@ class Server:
                 data = "Could not buy " + self.client_requests[1] + " ticket(s)"
             self.send_data(data, addr)
             self.client_requests = None
+            self.pop_leader_queue()
+
+    def pop_leader_queue(self):
+        if not self.leader_queue.empty() and not self.client_requests:
+            msg_list = self.leader_queue.get()
+            self.client_requests = msg_list
+            amount = msg_list[1]
+            self.proposal_val = amount
+            self.send_accepts()
 
     def send_add_node(self):
         msg = "node,{},{},{}".format(self.identifier, self.server_addr[0], self.uid)
