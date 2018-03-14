@@ -11,7 +11,7 @@ BUFFER_SIZE = 1024
 threads = []
 
 HEARTBEAT_FREQ = 0.4
-heartbeat_delta = HEARTBEAT_FREQ * 2 + random() * 3
+heartbeat_delta = HEARTBEAT_FREQ * 3 + random() * 3
 
 class Server:
     def __init__(self, identifier, server_addr):
