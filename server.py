@@ -121,7 +121,8 @@ class Server:
             if not self.leader:
                 self.leader = True
                 self.send_data_to_all("heartbeat")
-                print("I am leader")
+                time_leader = time()
+                print("I am leader" + "," + str(time_leader))
             self.send_learn()
 
     def send_learn(self):
