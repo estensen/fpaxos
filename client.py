@@ -47,7 +47,7 @@ class Client:
         if len(words) > 1:
             arg = words[1]
 
-        milliseconds = time() * 1000
+        milliseconds = self.get_milliseconds()
 
         if command == "show" or command == "random":
             self.send_msg("{},{},{},{}".format(command,  self.s[identifier][0], self.client_addrs[identifier][1], str(milliseconds)), identifier)
@@ -63,14 +63,12 @@ class Client:
         THROUGHPUT_EVERY_MILLISECONDS = 5000
         LATENCY_EVERY_MILLISECONDS = 1000
 
-
         latency = abs(float(milliseconds_rcvd) - float(milliseconds_send))
 
         self.lock.acquire()
         count_tput += 1
         latencies.append(latency)
         self.lock.release()
-
 
         if milliseconds_send - prev_time > THROUGHPUT_EVERY_MILLISECONDS and identifier == 'a':
             median_lat = round(median(latencies), 1)
