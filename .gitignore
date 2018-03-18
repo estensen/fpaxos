@@ -113,3 +113,6 @@ ENV/
 # Ignore logs
 *.txt
 !requirements.txt
+
+# Ignore VSCode config
+.vscode/

@@ -47,20 +47,12 @@ class Client:
         if len(words) > 1:
             arg = words[1]
 
-        milliseconds = time() * 1000
+        milliseconds = self.get_milliseconds()
 
         if command == "show" or command == "random":
             self.send_msg("{},{},{},{}".format(command,  self.s[identifier][0], self.client_addrs[identifier][1], str(milliseconds)), identifier)
         elif command == "buy" and arg.isdigit():
             self.send_msg("{},{},{},{},{}".format(command, arg, self.client_addrs[identifier][0], self.client_addrs[identifier][1], str(milliseconds)), identifier)
-        elif command == "change":
-            # Kill listen_thread before changing server_sock
-            self.server_sock.close()
-
-            for client_sock in self.client_socks:
-                client_sock.close()
-
-            self.socket_setup()
         else:
             print("Couldn't recognize the command", user_input)
     
@@ -71,14 +63,12 @@ class Client:
         THROUGHPUT_EVERY_MILLISECONDS = 5000
         LATENCY_EVERY_MILLISECONDS = 1000
 
-
         latency = abs(float(milliseconds_rcvd) - float(milliseconds_send))
 
         self.lock.acquire()
         count_tput += 1
         latencies.append(latency)
         self.lock.release()
-
 
         if milliseconds_send - prev_time > THROUGHPUT_EVERY_MILLISECONDS and identifier == 'a':
             median_lat = round(median(latencies), 1)
@@ -106,7 +96,7 @@ class Client:
             msg = data.decode("utf-8")
             print(msg)
 
-            milliseconds_rcvd = time() * 1000
+            milliseconds_rcvd = self.get_milliseconds()
             self.record_measurements(msg, milliseconds_rcvd, identifier)
 
     def msg_load(self, identifier):
@@ -114,23 +104,30 @@ class Client:
         msg_count = 0
         rate_interval = 5000
         while True:
-            interval_time_start = time() * 1000
+            interval_time_start = self.get_milliseconds()
             while True:
-                interval_time_current = time() * 1000
+                interval_time_current = self.get_milliseconds()
 
                 if interval_time_current - interval_time_start < rate_interval:
-                    sleep_time = 1 / float(msg_per_sec)
-                    sleep(sleep_time)
-
+                    self.msg_interval_sleep(msg_per_sec)
                     msg_count += 1
-                    num_tickets = randint(1, 100)
-                    msg_data = ('buy ' + str(num_tickets))
+                    msg_data = self.random_buy()
                     self.process_user_input(msg_data, identifier)
                 else:
                     if msg_per_sec < 100:
                         msg_per_sec += 0.2
-
                     break
+
+    def get_milliseconds(self):
+        return time() * 1000
+
+    def random_buy(self):
+        num_tickets = randint(1, 100)
+        return ('buy ' + str(num_tickets))
+
+    def msg_interval_sleep(self, msg_per_sec):
+        sleep_time = 1 / float(msg_per_sec)
+        sleep(sleep_time)
 
     def thread_setup(self):
         self.lock = Lock()

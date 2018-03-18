@@ -1,4 +1,7 @@
-# FPaxos
+
+
+# FPaxos &middot; [![Maintainability](https://api.codeclimate.com/v1/badges/bc2bd87850c319277c5f/maintainability)](https://codeclimate.com/github/estensen/fpaxos/maintainability)
+
 A (naive) implementation of Flexible Paxos made to test throughput and latency at leader failure
 
 # Getting Started
