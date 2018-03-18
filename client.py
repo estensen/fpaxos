@@ -111,21 +111,25 @@ class Client:
                 interval_time_current = self.get_milliseconds()
 
                 if interval_time_current - interval_time_start < rate_interval:
-                    sleep_time = 1 / float(msg_per_sec)
-                    sleep(sleep_time)
-
+                    self.msg_interval_sleep(msg_per_sec)
                     msg_count += 1
-                    num_tickets = randint(1, 100)
-                    msg_data = ('buy ' + str(num_tickets))
+                    msg_data = self.random_buy()
                     self.process_user_input(msg_data, identifier)
                 else:
                     if msg_per_sec < 100:
                         msg_per_sec += 0.2
-
                     break
 
     def get_milliseconds(self):
         return time() * 1000
+
+    def random_buy(self):
+        num_tickets = randint(1, 100)
+        return ('buy ' + str(num_tickets))
+
+    def msg_interval_sleep(self, msg_per_sec):
+        sleep_time = 1 / float(msg_per_sec)
+        sleep(sleep_time)
 
     def thread_setup(self):
         self.lock = Lock()
