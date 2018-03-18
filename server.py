@@ -178,22 +178,6 @@ class Server:
             print("el", el)
             self.validate_transaction(None, el)
 
-    def config_change(self, msg_list):
-        print("msg_list", msg_list)
-        print("New node added to cluster")
-        identifier, ip, port = msg_list
-        self.cluster[identifier] = (str(ip), int(port))
-        self.log.append(msg_list)
-
-    def recv_new_node(self, msg_list):
-        msg = "change," + ",".join(msg_list[1:])
-        if self.leader:
-            port = int(msg_list[3])
-            addr = (msg_list[2], port)
-            self.send_data("heartbeat", addr)  # Fast so the new node doesn't start an election
-            self.send_log(addr, [0, 0, port])
-            self.send_data_to_all(msg)
-
     def recv_buy(self, msg, from_uid):
         msg_list = msg.split(",")
 
@@ -317,15 +301,8 @@ class Server:
             elif command == "missing":
                 self.send_log(addr, msg_list)
 
-
             elif command == "log":
                 self.sync_log(msg)
-
-            elif command == "node":
-                self.recv_new_node(msg_list)
-
-            elif command == "change":
-                self.config_change(msg_list[1:])
 
             elif command == "heartbeat":
                 self.last_recv_heartbeat = time()

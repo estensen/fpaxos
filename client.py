@@ -53,14 +53,6 @@ class Client:
             self.send_msg("{},{},{},{}".format(command,  self.s[identifier][0], self.client_addrs[identifier][1], str(milliseconds)), identifier)
         elif command == "buy" and arg.isdigit():
             self.send_msg("{},{},{},{},{}".format(command, arg, self.client_addrs[identifier][0], self.client_addrs[identifier][1], str(milliseconds)), identifier)
-        elif command == "change":
-            # Kill listen_thread before changing server_sock
-            self.server_sock.close()
-
-            for client_sock in self.client_socks:
-                client_sock.close()
-
-            self.socket_setup()
         else:
             print("Couldn't recognize the command", user_input)
     
