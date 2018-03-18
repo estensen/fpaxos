@@ -98,7 +98,7 @@ class Client:
             msg = data.decode("utf-8")
             print(msg)
 
-            milliseconds_rcvd = time() * 1000
+            milliseconds_rcvd = self.get_milliseconds()
             self.record_measurements(msg, milliseconds_rcvd, identifier)
 
     def msg_load(self, identifier):
@@ -106,9 +106,9 @@ class Client:
         msg_count = 0
         rate_interval = 5000
         while True:
-            interval_time_start = time() * 1000
+            interval_time_start = self.get_milliseconds()
             while True:
-                interval_time_current = time() * 1000
+                interval_time_current = self.get_milliseconds()
 
                 if interval_time_current - interval_time_start < rate_interval:
                     sleep_time = 1 / float(msg_per_sec)
@@ -123,6 +123,9 @@ class Client:
                         msg_per_sec += 0.2
 
                     break
+
+    def get_milliseconds(self):
+        return time() * 1000
 
     def thread_setup(self):
         self.lock = Lock()
