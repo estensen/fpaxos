@@ -27,7 +27,7 @@ class Server:
         self.quorum1_size = 4
         self.quorum2_size = 2
 
-        self.init_tickets_available = 1000000000
+        self.init_tickets_available = 1_000_000_000
         self.tickets_available = self.init_tickets_available
         self.client_requests = None
 
