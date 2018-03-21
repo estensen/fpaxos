@@ -53,7 +53,7 @@ class Server:
         self.recv_promises_uid = set()
         proposal_num = self.proposal_id[0]
         proposal_id = self.proposal_id[1]
-        data = "prepare,{},{}".format(proposal_num, proposal_id)
+        data = f"prepare,{proposal_num},{proposal_id}"
         self.send_data_to_all(data)
 
     def recv_prepare(self, addr, msg_list):
@@ -62,14 +62,13 @@ class Server:
         if proposal_id >= self.promised_id:
             self.promised_id = proposal_id
 
-            promise_msg = "promise,{},{},{},{},{},{}".format(
-                proposal_num,
-                proposer_id,
-                self.uid,
-                self.last_accepted_num,
-                self.last_accepted_proposer_id,
-                self.last_accepted_val
-            )
+            promise_msg = f"promise,\
+                            {proposal_num},\
+                            {proposer_id},\
+                            {self.uid},\
+                            {self.last_accepted_num},\
+                            {self.last_accepted_proposer_id},\
+                            {self.last_accepted_val}"
 
             self.send_data(promise_msg, addr)
             print("Returned promise")
@@ -89,7 +88,11 @@ class Server:
 
     def send_accepts(self):
         self.recv_accepted_uid = set()
-        data = "accept,{},{},{},{}".format(self.proposal_id[0], self.proposal_id[1], self.proposal_val, len(self.log))
+        data = f"accept,\
+                 {self.proposal_id[0]},\
+                 {self.proposal_id[1]},\
+                 {self.proposal_val},\
+                 {len(self.log)}"
         self.send_data_to_all(data)
 
     def recv_accept(self, addr, msg_list):
@@ -109,8 +112,11 @@ class Server:
             self.send_accept(addr)
 
     def send_accept(self, addr):
-        accepted_data = "accepted,{},{},{},{}".format(self.last_accepted_num, \
-            self.last_accepted_proposer_id, self.uid, self.last_accepted_val)
+        accepted_data = f"accepted,\
+                          {self.last_accepted_num},\
+                          {self.last_accepted_proposer_id},\
+                          {self.uid},\
+                          {self.last_accepted_val}"
         to_addr = (addr[0], int(self.last_accepted_proposer_id))
         self.send_data(accepted_data, to_addr)
 
@@ -129,7 +135,7 @@ class Server:
     def send_learn(self):
         proposal_num = self.proposal_id[0]
         proposal_id = self.proposal_id[1]
-        data = "learn,{},{},{}".format(proposal_num, proposal_id, self.proposal_val)
+        data = f"learn,{proposal_num},{proposal_id},{self.proposal_val}"
         self.proposal_val = None
         self.send_data_to_all(data)
 
@@ -141,7 +147,7 @@ class Server:
             new_ticket_balance = self.tickets_available - tickets
             if new_ticket_balance >= 0:
                 self.tickets_available = new_ticket_balance
-                print(str(self.tickets_available) + " left")
+                print(f"{self.tickets_available} left")
                 self.log.append(msg_list)
                 self.write_to_persistent_storage(msg_list)
             if addr:
@@ -150,7 +156,7 @@ class Server:
     def request_missing_bytes(self, leader_log_len):
         from_index = len(self.log)
         to_index = leader_log_len
-        data = "missing,{},{},{}".format(from_index, to_index, self.uid)
+        data = f"missing,{from_index},{to_index},{self.uid}"
         self.send_data_to_others(data)
 
     def send_log(self, addr, msg_list):
@@ -212,7 +218,7 @@ class Server:
         msg = bytes(data, encoding="ascii")
         self.sock.sendto(msg, addr)
         if data[:9] != "heartbeat":
-            print("Message {} sent to {}".format(data, addr))
+            print(f"Message {data} sent to {addr}")
 
     def send_data_to_all(self, data):
         for _, addr in self.cluster.items():
@@ -250,7 +256,7 @@ class Server:
             self.send_accepts()
 
     def send_add_node(self):
-        msg = "node,{},{},{}".format(self.identifier, self.server_addr[0], self.uid)
+        msg = f"node,{self.identifier},{self.server_addr[0]},{self.uid}"
         self.send_data_to_others(msg)
         print("Try to join cluster")
 
@@ -270,7 +276,7 @@ class Server:
             command = msg_list[0]
 
             if command != "heartbeat":
-                print("Received {} from {}".format(msg, addr))
+                print(f"Received {msg} from {addr}")
                 print("msg_list", msg_list)
 
             # Client commands
@@ -307,7 +313,7 @@ class Server:
             elif command == "heartbeat":
                 self.last_recv_heartbeat = time()
             else:
-                print("Message command {} not recognized".format(command))
+                print(f"Message command {command} not recognized")
 
     def heartbeat(self):
         while True:
